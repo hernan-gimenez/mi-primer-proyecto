@@ -1,31 +1,85 @@
-docker# Mi Primer Proyecto
+# Gestor de Enlaces
 
-¡Bienvenido a mi primer proyecto en GitHub! Este es un proyecto de ejemplo para aprender a usar Git y GitHub.
+Aplicación web para guardar y gestionar enlaces importantes.
 
-## Descripción
+## Características
 
-Este repositorio ha sido creado como parte de mi aprendizaje en el control de versiones con Git y GitHub.
+- Guarda enlaces con título y descripción
+- Lista todos los enlaces guardados
+- Elimina enlaces que ya no necesites
+- Interfaz web sencilla e intuitiva
+- Base de datos SQLite para persistencia de datos
+- Arquitectura hexagonal para mejor mantenibilidad
+
+## Requisitos
+
+- Python 3.9 o superior
+- Docker y Docker Compose (opcional)
 
 ## Instalación
 
 1. Clona el repositorio:
 ```bash
-git clone https://github.com/hernan-gimenez/mi-primer-proyecto.git
+git clone https://github.com/tu-usuario/mi-primer-proyecto.git
+cd mi-primer-proyecto
 ```
 
-2. Navega al directorio del proyecto:
+2. Crea y activa un entorno virtual (recomendado):
 ```bash
-cd mi-primer-proyecto
+python -m venv venv
+source venv/bin/activate  # En Windows: .\venv\Scripts\activate
+```
+
+3. Instala las dependencias:
+```bash
+pip install -r requirements.txt
 ```
 
 ## Uso
 
-Añade instrucciones sobre cómo usar tu proyecto aquí.
+### Opción 1: Ejecución local
 
-## Contribución
+1. Inicia la aplicación:
+```bash
+uvicorn src.main:app --reload
+```
 
-Las contribuciones son bienvenidas. Por favor, lee las guías de contribución para más detalles.
+2. Abre tu navegador en:
+```
+http://localhost:8000
+```
+
+### Opción 2: Usando Docker
+
+1. Construye y ejecuta los contenedores:
+```bash
+docker-compose up --build
+```
+
+2. La aplicación estará disponible en:
+```
+http://localhost:8000
+```
+
+## Estructura del Proyecto
+
+```
+src/
+├── domain/           # Entidades y objetos de valor
+├── application/      # Casos de uso y puertos
+└── infrastructure/   # Implementaciones concretas
+    ├── database/     # Configuración de la base de datos
+    ├── repositories/ # Implementaciones de repositorios
+    └── api/         # API REST
+```
+
+## API Endpoints
+
+- `GET /` - Página de inicio
+- `GET /api/links/` - Obtener todos los enlaces
+- `POST /api/links/` - Crear un nuevo enlace
+- `DELETE /api/links/{id}` - Eliminar un enlace
 
 ## Licencia
 
-Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.

@@ -2,15 +2,31 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Copiar los archivos necesarios
-COPY server.py .
-COPY index.html .
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar dependencias (solo necesitamos Python estándar)
-# No se necesitan dependencias adicionales
+# Configurar PYTHONPATH
+ENV PYTHONPATH="${PYTHONPATH}:/app"
 
-# Puerto expuesto
+# Copiar requirements e instalar dependencias
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar la aplicación
+COPY . .
+
+# Crear directorios necesarios
+RUN mkdir -p /app/static /app/templates
+
+# Copiar archivos estáticos y plantillas
+COPY static/ /app/static/
+COPY templates/ /app/templates/
+
+# Exponer el puerto
 EXPOSE 8000
 
 # Comando para ejecutar la aplicación
-CMD ["python", "server.py"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

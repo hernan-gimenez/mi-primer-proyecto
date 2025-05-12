@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Enlaces</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.delete {
+            background-color: #f44336;
+        }
+        button.delete:hover {
+            background-color: #d32f2f;
+        }
+        .link-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .link-item:last-child {
+            border-bottom: none;
+        }
+        .link-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .error {
+            color: #d32f2f;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gestor de Enlaces</h1>
+        
+        <div id="error-message" class="error"></div>
+        
+        <div class="form-group">
+            <input type="text" id="link-input" placeholder="https://ejemplo.com" required>
+            <button onclick="saveLink()">Guardar Enlace</button>
+        </div>
+        
+        <div id="links-container">
+            <h2>Tus Enlaces Guardados</h2>
+            <div id="links-list">
+                <!-- Los enlaces se cargarán aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api';
+        
+        // Mostrar mensaje de error
+        function showError(error) {
+            const errorDiv = document.getElementById('error-message');
+            let errorMessage = 'Error desconocido';
+            
+            // Manejar diferentes tipos de error
+            if (typeof error === 'string') {
+                errorMessage = error;
+            } else if (error.message) {
+                errorMessage = error.message;
+            } else if (error.detail) {
+                errorMessage = error.detail;
+            } else {
+                errorMessage = JSON.stringify(error);
+            }
+            
+            console.error('Error detallado:', error);
+            errorDiv.textContent = `Error: ${errorMessage}`;
+            errorDiv.style.display = 'block';
+            
+            // Ocultar el mensaje después de 10 segundos
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 10000);
+        }
+
+        // Cargar enlaces al iniciar
+        document.addEventListener('DOMContentLoaded', loadLinks);
+
+        async function loadLinks() {
+            try {
+                const response = await fetch(`${API_URL}/links/`);
+                if (!response.ok) {
+                    throw new Error('Error al cargar los enlaces');
+                }
+                const links = await response.json();
+                const linksList = document.getElementById('links-list');
+                linksList.innerHTML = '';
+
+                if (links.length === 0) {
+                    linksList.innerHTML = '<p>No hay enlaces guardados.</p>';
+                    return;
+                }
+
+                links.forEach(link => {
+                    const linkElement = document.createElement('div');
+                    linkElement.className = 'link-item';
+                    linkElement.innerHTML = `
+                        <a href="${link.url}" target="_blank">${link.url}</a>
+                        <div class="link-actions">
+                            <button class="delete" onclick="deleteLink(${link.id})">Eliminar</button>
+                        </div>
+                    `;
+                    linksList.appendChild(linkElement);
+                });
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function saveLink() {
+            const linkInput = document.getElementById('link-input');
+            const url = linkInput.value.trim();
+
+            if (!url) {
+                showError('Por favor ingresa una URL');
+                return;
+            }
+
+            try {
+                console.log('Enviando solicitud para guardar:', url);
+                const response = await fetch(`${API_URL}/links/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ url })
+                });
+
+                console.log('Respuesta recibida:', response);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Error en la respuesta:', errorData);
+                    throw errorData || new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Enlace guardado:', result);
+                
+                // Limpiar el campo de entrada
+                linkInput.value = '';
+                
+                // Recargar la lista de enlaces
+                await loadLinks();
+            } catch (error) {
+                console.error('Error al guardar el enlace:', error);
+                showError(error);
+            }
+        }
+
+        async function deleteLink(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este enlace?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/links/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Error al eliminar el enlace');
+                }
+
+                // Recargar la lista de enlaces
+                await loadLinks();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+    </script>
+</body>
+</html>

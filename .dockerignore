@@ -13,4 +13,9 @@ ENV/
 .venv
 *.swp
 .DS_Store
-links.json
+*.db
+*.sqlite3
+links.db
+.pytest_cache/
+.coverage
+htmlcov/

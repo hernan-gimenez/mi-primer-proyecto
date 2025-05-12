@@ -1,10 +1,13 @@
 version: '3.8'
 
 services:
-  link-saver:
+  app:
     build: .
     ports:
-      - "5000:5000"
+      - "8000:8000"
     volumes:
       - .:/app
-    restart: unless-stopped
+      - /app/venv
+    environment:
+      - DATABASE_URL=sqlite:////app/links.db
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
