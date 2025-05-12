@@ -31,19 +31,28 @@ def save():
         save_link(link)
     return redirect(url_for('home'))
 
-# Ruta para archivos estáticos (solo para archivos en la carpeta 'static')
+# Ruta para archivos estáticos
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     return send_from_directory('static', filename)
+
+# Ruta para manejar rutas de la aplicación SPA
+@app.route('/<path:path>')
+def serve_any(path):
+    return app.send_static_file('index.html')
+
+# Manejo de errores 404
+@app.errorhandler(404)
+def not_found(e):
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     # Asegurarse de que el directorio de plantillas exista
     if not os.path.exists('templates'):
         os.makedirs('templates')
     
-    # Mover index.html a la carpeta templates si es necesario
-    if os.path.exists('index.html') and not os.path.exists('templates/index.html'):
-        import shutil
-        shutil.move('index.html', 'templates/index.html')
+    # Crear archivo de enlaces si no existe
+    if not os.path.exists(LINKS_FILE):
+        open(LINKS_FILE, 'a').close()
     
     app.run(host='0.0.0.0', port=5000, debug=True)
