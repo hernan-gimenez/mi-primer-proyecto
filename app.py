@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 import os
 
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__)
+
+# Configuración
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # File to store links
 LINKS_FILE = 'links.txt'
@@ -28,10 +31,19 @@ def save():
         save_link(link)
     return redirect(url_for('home'))
 
-# Servir archivos estáticos desde la raíz
-@app.route('/<path:filename>')
+# Ruta para archivos estáticos (solo para archivos en la carpeta 'static')
+@app.route('/static/<path:filename>')
 def serve_static(filename):
-    return send_from_directory('.', filename)
+    return send_from_directory('static', filename)
 
 if __name__ == '__main__':
+    # Asegurarse de que el directorio de plantillas exista
+    if not os.path.exists('templates'):
+        os.makedirs('templates')
+    
+    # Mover index.html a la carpeta templates si es necesario
+    if os.path.exists('index.html') and not os.path.exists('templates/index.html'):
+        import shutil
+        shutil.move('index.html', 'templates/index.html')
+    
     app.run(host='0.0.0.0', port=5000, debug=True)
