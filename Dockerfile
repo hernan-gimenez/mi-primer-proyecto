@@ -2,13 +2,15 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copiar los archivos necesarios
+COPY server.py .
+COPY index.html .
 
-COPY . .
+# Instalar dependencias (solo necesitamos Python estándar)
+# No se necesitan dependencias adicionales
 
-# Expose port 5000 for the Flask app
-EXPOSE 5000
+# Puerto expuesto
+EXPOSE 8000
 
-# Command to run the application
-CMD ["python", "app.py"]
+# Comando para ejecutar la aplicación
+CMD ["python", "server.py"]
